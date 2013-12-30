@@ -1,0 +1,26 @@
+doctype html
+html(lang="en")
+	head
+		title benchmark portal
+		link(rel='stylesheet', type='text/css', href='/css/jquery.ui.css')
+		link(rel='stylesheet', type='text/css', href='/css/footable.core.css')
+		link(rel='stylesheet', type='text/css', href='/css/footable.standalone.css')
+		link(rel='stylesheet', type='text/css', href='/css/style.css')
+	body
+		select#report-date(multiple='multiple', size='5')
+		input#benchmark-btn(type='button', value='benchmark now')
+		div#error-mesg
+		div#chart-block
+			h2 benchmark chart (10 requests at 1 connection)
+			div#benchmark-tabs
+				ul
+					li
+						a(href='#table-chart') Table
+					li
+						a(href='#bar-chart') Bar
+					li
+						a(href='#line-chart') Line
+				div#table-chart.subtab
+				div#bar-chart.subtab
+				div#line-chart.subtab
+		script(data-main='/main.js', src="/script/lib/require.js")

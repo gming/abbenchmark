@@ -1,0 +1,7 @@
+node_modules
+.settings
+.sass-cache
+*.project
+*.jshintrc
+.DS_Store
+report

@@ -1,0 +1,18 @@
+{
+  "name": "abbenchmark",
+  "version": "0.1.1",
+  "description": "abbenchmark",
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/gming/abbenckmark.git"
+  },
+  "dependencies": {
+    "express": "git+ssh://git@github.com:visionmedia/express.git#3.2.6",
+    "jade": "git+ssh://git@github.com:visionmedia/jade.git#1.0.0",
+    "moment": "git+ssh://git@github.com:moment/moment.git#2.5.0"
+  },
+  "author": "Gming <ppooccoo0123@gmail.com>",
+  "license": "MIT",
+  "readmeFilename": "README.md"
+}

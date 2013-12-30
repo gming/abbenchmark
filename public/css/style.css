@@ -1,0 +1,24 @@
+div#chart-block {
+	padding-top: 10px;
+}
+
+div.ui-widget-content {
+	background: #FFFFFF;
+	min-height: 800px;
+	width: 95%;
+}
+
+table.table-cahrt {
+	width: 95%;
+	border-collapse: collapse;
+	border: 1px solid black;
+}
+
+div#chart-block table, div#chart-block th, div#chart-block td {
+	border: 1px solid black;
+}
+
+div#chart-block td {
+	text-align: center;
+	vertical-align: middle;
+}

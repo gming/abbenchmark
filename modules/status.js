@@ -1,0 +1,4 @@
+exports.OK = 0;
+exports.BENCHMARK_OCCUR_ERROR = -1001;
+exports.NO_BENCHMARK_DATA = -1002;
+exports.UNKNOW_ERROR = -9999;
