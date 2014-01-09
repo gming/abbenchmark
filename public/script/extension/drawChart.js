@@ -1,10 +1,10 @@
 define(["jquery", "chart", "chartExport"], function ($, chart, chartExport) {
 	var _private = {
-		formatToSeriesData : function (group) {
+		formatToSeriesData : function (group, infor) {
 			var series = [];
 			for (var datetime in group) {
 				series.push({
-	                name: datetime,
+	                name: datetime + " " + JSON.stringify(infor[datetime]),
 	                data: group[datetime]
 	            });
 			}
@@ -64,7 +64,7 @@ define(["jquery", "chart", "chartExport"], function ($, chart, chartExport) {
 	            series: customJson.seriesData
 	        };
 		},
-		getTableLayout : function (yColumn, xColumn, values) {
+		getTableLayout : function (yColumn, xColumn, values, infor) {
 			var table = $("<table class='table-cahrt' />");
 			var yCount = yColumn.length + 1;
 			var subTitle = ["min", "max", "mean"];
@@ -74,7 +74,7 @@ define(["jquery", "chart", "chartExport"], function ($, chart, chartExport) {
 					var titleTr = $("<tr />").appendTo(table);
 					$("<td />").html("Test web site").attr("rowspan", 2).appendTo(titleTr);
 					for (var j = 0 ; j < xColumn.length ; j++) {
-						$("<td />").html(xColumn[j]).attr("colspan", subTitle.length).appendTo(titleTr);
+						$("<td />").html(xColumn[j] + " " + JSON.stringify(infor[xColumn[j]])).attr("colspan", subTitle.length).appendTo(titleTr);
 					}
 					
 					// sub title
@@ -112,28 +112,28 @@ define(["jquery", "chart", "chartExport"], function ($, chart, chartExport) {
 
 	//
 	return {
-		drawBar : function (container, items, datagroup) {
+		drawBar : function (container, items, datagroup, infor) {
 			var chart = new Highcharts.Chart(_private.getChartConfig({
 				container : container,
 				chartType : "column",
 				items : items,
-				seriesData : _private.formatToSeriesData(datagroup)
+				seriesData : _private.formatToSeriesData(datagroup, infor)
 			}));
 		},
-		drawLine : function (container, items, datagroup) {
+		drawLine : function (container, items, datagroup, infor) {
 			var chart = new Highcharts.Chart(_private.getChartConfig({
 				container : container,
 				chartType : "line",
 				items : items,
-				seriesData : _private.formatToSeriesData(datagroup)
+				seriesData : _private.formatToSeriesData(datagroup, infor)
 			}));
 		},
-		drawTable : function (container, items, datagroup) {
+		drawTable : function (container, items, datagroup, infor) {
 			var xKey = [];
 			for (var datetime in datagroup) {
 				xKey.push(datetime);
 			}
-			var table = _private.getTableLayout(items, xKey, datagroup);
+			var table = _private.getTableLayout(items, xKey, datagroup, infor);
 			table.appendTo(container);
 		}
 	};

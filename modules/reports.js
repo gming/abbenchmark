@@ -17,6 +17,10 @@ var parsingByTime = function (executeTime) {
 	var report = {};
 	var folder = util.format(reportFolder + '%s' + path.sep, executeTime);
 	var reportFileList = fs.readdirSync(folder) || [];
+	reportFileList = reportFileList.filter(function (element) {
+		element = element.replace(".txt", "");
+		return element !== "infor" && element !== "error";
+	});
 	if (reportFileList.length > 0) {
 		for (var i = 0 ; i < reportFileList.length ; i++) {
 			var reportFile = reportFileList[i];
@@ -39,7 +43,11 @@ var parsingByTime = function (executeTime) {
 			report[domain] = json;
 		}
 	}
-	return report;
+	var infor = JSON.parse(fs.readFileSync(folder + "infor.txt").toString('utf8'));
+	return {
+		list : report,
+		infor : infor
+	};
 };
 
 var parser = function (executeTime) {
@@ -52,7 +60,10 @@ var parser = function (executeTime) {
 	for (var i = 0 ; i < executeTime.length ; i++) {
 		var datetime = executeTime[i];
 		var report = parsingByTime(datetime);
-		reportsJson[moment.utc(parseInt(datetime)).format("YYYY/MM/DD HH:mm:ss")] = report;
+		reportsJson[moment.utc(parseInt(datetime)).format("YYYY/MM/DD HH:mm:ss")] = {
+			report : report.list,
+			infor : report.infor
+		};
 	}
 	return reportsJson;
 };

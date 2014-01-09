@@ -39,7 +39,7 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 			var result = {};
 			var count = 0;
 			for (var datetime in rowDataArr) {
-				var rowData = rowDataArr[datetime];
+				var rowData = rowDataArr[datetime].report;
 				
 				// get item array
 				var items = "";
@@ -53,6 +53,7 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 					result["item"] = items;
 					result["means"] = {};
 					result["table"] = {};
+					result["infor"] = {};
 				} else {
 					var temp = result["item"];
 					for (var j = 0 ; j < items.length ; j++) {
@@ -97,6 +98,7 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 				}
 				result["means"][datetime] = meanJson;
 				result["table"][datetime] = tableJson;
+				result["infor"][datetime] = rowDataArr[datetime].infor;
 				count++;
 			}
 			
@@ -121,7 +123,6 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 					dataItem[date] = dataArr;
 				}
 			}
-			console.log(calculate);
 			return calculate;
 		},
 		clearCharBlock : function () {
@@ -134,9 +135,10 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 				{'datetimes' : values},
 				function (resp) {
 					var result = _private.calculateAndFormat(resp.response);
-					drawChart.drawBar(_private.barChartBlock, result.item, result.means);
-					drawChart.drawLine(_private.lineChartBlock, result.item, result.means);
-					drawChart.drawTable(_private.tableChartBlock, result.item, result.table);
+					console.log(result);
+					drawChart.drawBar(_private.barChartBlock, result.item, result.means, result.infor);
+					drawChart.drawLine(_private.lineChartBlock, result.item, result.means, result.infor);
+					drawChart.drawTable(_private.tableChartBlock, result.item, result.table, result.infor);
 				}
 			);
 		},
@@ -169,10 +171,13 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 	
 	// do benchmark
     $('#benchmark-btn').click(function () {
+		var remark = prompt("remark");
     	var btn = $(this);
     	var oriValue = btn.attr("value");
     	btn.attr("disabled", "disabled").attr("value", "benchmarking....");
-		api.benchmarkingNow(function () {
+		api.benchmarkingNow({
+			remark : remark
+		}, function () {
 			btn.removeAttr("disabled").attr("value", oriValue);
 			_private.getReportDateOption();
 		});

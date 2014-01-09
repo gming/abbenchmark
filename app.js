@@ -24,6 +24,7 @@ app.get('/', function (req, res) {
 
 app.post('/api/benchmarkingNow', function (req, res) {
 	try {
+		var remark = req.body.remark;
 		benchmarker.startBenchmarking(function (executeTime) {
 			executeTime = executeTime || "";
 			if (executeTime !== "") {
@@ -31,6 +32,8 @@ app.post('/api/benchmarkingNow', function (req, res) {
 			} else {
 				response.json(res, status.NO_BENCHMARK_DATA);
 			}
+		}, {
+			remark : remark
 		});
 	} catch (e) {
 		response.json(res, status.BENCHMARK_OCCUR_ERROR);
