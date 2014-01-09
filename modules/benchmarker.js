@@ -21,7 +21,9 @@ var isNotEmptyString = function(value) {
 };
 
 var getUrlDomain = function(site) {
-	return site.replace("http://", "").replace("/", "");
+	site = site.replace("http://", "");
+	var slashIndex = site.indexOf("/");
+	return site.substring(0, slashIndex);
 };
 
 var checklocation = function (site) {
