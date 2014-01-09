@@ -70,6 +70,10 @@ var parser = function (executeTime) {
 
 var getReportTimes = function () {
 	var dateList = [];
+	var exist = fs.existsSync(reportFolder);
+	if (! exist) {
+		fs.mkdirSync(reportFolder);
+	}
 	var reportDateList = fs.readdirSync(reportFolder) || [];
 	for (var i = 0 ; i < reportDateList.length ; i++) {
 		var reportDate = reportDateList[i];
