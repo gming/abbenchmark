@@ -6,47 +6,62 @@
   *  done		完成 HTTP 要求並中斷連線
  **/
 var fs = require('fs');
+var md5 = require('MD5');
 var path = require('path');
 var rootDir = path.dirname(require.main.filename);
 var reportFolder = rootDir + path.sep + 'report' + path.sep;
 var moment = require('moment');
 var util = require('util');
 
+var getUrlDomain = function(site) {
+	site = site.replace("http://", "");
+	var slashIndex = site.indexOf("/");
+	return site.substring(0, slashIndex);
+};
+
 var parsingByTime = function (executeTime) {
 	executeTime = executeTime || "";
 	var report = {};
 	var folder = util.format(reportFolder + '%s' + path.sep, executeTime);
-	var reportFileList = fs.readdirSync(folder) || [];
-	reportFileList = reportFileList.filter(function (element) {
-		element = element.replace(".txt", "");
-		return element !== "infor" && element !== "error";
-	});
-	if (reportFileList.length > 0) {
-		for (var i = 0 ; i < reportFileList.length ; i++) {
-			var reportFile = reportFileList[i];
-			var domain = reportFile.replace(".txt", "");
-			var dataSet = fs.readFileSync(folder + reportFile).toString('utf8');
-			var dataArr = dataSet.split("\n");
+	var content = fs.readFileSync(rootDir + path.sep + "location.txt").toString('utf8');
+	content.split("\n").forEach(function (direction) {
+		if (direction !== "") {
+			var location = direction.split("|||");
+			
+			// get apache benchmark data
 			var json = [];
-			for (var j = 1 ; j < dataArr.length ; j++) {
-				if (dataArr[j] === "") {
-					continue ;
+			for (var i = 0 ; i < location.length ; i++) {
+				var filename = md5(location[i]);
+				var dataSet = fs.readFileSync(folder + filename + ".txt").toString('utf8');
+				var dataArr = dataSet.split("\n");
+				for (var j = 1 ; j < dataArr.length ; j++) {
+					if (dataArr[j] === "") {
+						continue ;
+					}
+					var data = dataArr[j].split("\t");
+					if (i === 0) {
+						json.push({
+							'connect' : parseInt(data[2]),
+							'processing' : parseInt(data[3]),
+							'total' : parseInt(data[4]),
+							'waiting' : parseInt(data[5])
+						});
+					} else {
+						var obj = json[j - 1];
+						obj.connect += parseInt(data[2]);
+						obj.processing += parseInt(data[3]);
+						obj.total += parseInt(data[4]);
+						obj.waiting += parseInt(data[5]);
+					}
 				}
-				var data = dataArr[j].split("\t");
-				json.push({
-					'connect' : parseInt(data[2]),
-					'processing' : parseInt(data[3]),
-					'total' : parseInt(data[4]),
-					'waiting' : parseInt(data[5])
-				});
 			}
-			report[domain] = json;
+			report[getUrlDomain(location[0])] = json;
 		}
-	}
-	var infor = JSON.parse(fs.readFileSync(folder + "infor.txt").toString('utf8'));
+	});
+	
 	return {
 		list : report,
-		infor : infor
+		infor : JSON.parse(fs.readFileSync(folder + "infor.txt").toString('utf8'))
 	};
 };
 

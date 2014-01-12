@@ -1,20 +1,26 @@
 var util = require('util');
+var md5 = require('MD5');
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var rootDir = path.dirname(require.main.filename);
-var apacheToolPathForLinux = '/usr/bin/ab';
-var apacheToolPathForWin = rootDir + path.sep + 'bin' + path.sep + 'ab.exe';
-var reportPath = rootDir + path.sep + 'report' + path.sep + '%s' + path.sep;
-var reportSaveFile = reportPath + '%s.txt';
-var errorSaveFile = reportPath + 'error.txt';
-var inforSaveFile = reportPath + 'infor.txt';
-var saveReportCommand = ' -g ' + reportSaveFile;
-var abcommand =  ' -v 4 -n %s -c 1 %s ';
+var abLinux = '/usr/bin/ab';
+var abWin = rootDir + path.sep + 'bin' + path.sep + 'ab.exe';
+var reportFolder = rootDir + path.sep + 'report' + path.sep + '%s' + path.sep;
+var abFolder = reportFolder + 'ab' + path.sep;
+var pingFolder = reportFolder + 'ping' + path.sep;
+var nsFolder = reportFolder + 'ns' + path.sep;
+var errorSaveFile = reportFolder + 'error.txt';
+var inforSaveFile = reportFolder + 'infor.txt';
+var abGParam = ' -g ' + reportFolder + '%s.txt';
+var abCommonParam = ' -v 4 -n %s -c 1 %s ';
+var pingCommand = 'ping %s -n 1';
+var nsLookupCommand = 'nslookup %s';
 var fetchOK = 0;
-var token_200 = "LOG: Response code = ";
-var token_not_200 = "WARNING: Response code not 2xx ";
-var token_location = "Location: ";
+var resCode200 = "LOG: Response code = ";
+var resCodeNot200 = "WARNING: Response code not 2xx ";
+var httpHeaderLocation = "Location: ";
+var locationMap = {};
 
 var isNotEmptyString = function(value) {
 	return (value !== undefined && value !== null && value !== "");
@@ -26,40 +32,61 @@ var getUrlDomain = function(site) {
 	return site.substring(0, slashIndex);
 };
 
-var checklocation = function (site) {
-	var process = require('child_process');
+var formattingUrl = function(site) {
 	site = site.trim();
-	if (site === "") {
-		return ;
-	}
-
 	if (site.substring(site.length - 1) !== "/") {
 		site = site + "/";
 	}
+	return site;
+};
+
+var writeLocation = function(data) {
+	fs.appendFile(rootDir + path.sep + "location.txt", new Buffer(data + "\n"));
+};
+
+var writeMapping = function(location) {
+	fs.appendFile(rootDir + path.sep + "mapping.txt", new Buffer(location + " , " + md5(location) + "\n"));
+};
+
+var checklocation = function (orisite, site) {
 	var command = getCommand({
 		requestCount : 1, 
-		site : site
+		site : formattingUrl(site)
 	});
 	
+	var process = require('child_process');
 	var childProcess = process.exec(command, function (error, stdout, stderr) {
-		fs.appendFile(rootDir + path.sep + "test.txt", new Buffer(stdout));
 		var done = stdout.indexOf("..done");
 		if (done !== -1) {
 			var responseCode = 0;
-			var token_200_index = stdout.indexOf(token_200);
-			if (token_200_index !== -1) {
-				responseCode = stdout.substring(token_200_index + token_200.length, token_200_index + token_200.length + 3);
+			var resCode200_index = stdout.indexOf(resCode200);
+			if (resCode200_index !== -1) {
+				responseCode = stdout.substring(resCode200_index + resCode200.length, resCode200_index + resCode200.length + 3);
 			} else {
-				var token_not_200_index = stdout.indexOf(token_not_200);
-				responseCode = stdout.substring(token_not_200_index + token_not_200.length, token_not_200_index + token_not_200.length + 5);responseCode = responseCode.replace("(", "").replace(")", "");
+				var resCodeNot200_index = stdout.indexOf(resCodeNot200);
+				responseCode = stdout.substring(resCodeNot200_index + resCodeNot200.length, resCodeNot200_index + resCodeNot200.length + 5);
+				responseCode = responseCode.replace("(", "").replace(")", "");
 			}
+
+			// 
+			var arr = locationMap[orisite];
+			if (!arr) {
+				orisite = formattingUrl(orisite);
+				locationMap[orisite] = [orisite];
+				writeMapping(orisite);
+			} else {
+				site = formattingUrl(site);
+				arr.push(site);
+				writeMapping(site);
+			}
+			
 			// deal with http response code
 			if (responseCode === "200") {
-				fs.appendFile(rootDir + path.sep + "location.txt", new Buffer(site + "\n"));
+				console.log("test end: " + orisite);
 			} else if (responseCode.indexOf("3") === 0) {
-				var locationIndex = stdout.indexOf(token_location);
-				var newsite = stdout.substring(locationIndex + token_location.length).split("\n")[0];
-				checklocation(newsite);
+				var locationIndex = stdout.indexOf(httpHeaderLocation);
+				var newsite = stdout.substring(locationIndex + httpHeaderLocation.length).split("\n")[0];
+				checklocation(orisite, newsite);
 			} else {
 				console.log("can't test: " + site, command);
 			}
@@ -72,54 +99,95 @@ var checklocation = function (site) {
 
 var checkSiteList = function () {
 	var content = fs.readFileSync(rootDir + path.sep + "site.txt").toString('utf8');
+	var realCount = 0;
 	var sites = content.split("\n");
 	if (sites.length > 0) {
 		fs.writeFileSync(rootDir + path.sep + "location.txt", new Buffer(""), "utf8");
-		fs.writeFileSync(rootDir + path.sep + "test.txt", new Buffer(""), "utf8");
-		for (var i = 0 ; i < sites.length ; i++) {
-			var site = sites[i];
-			checklocation(site);
-		}
+		fs.writeFileSync(rootDir + path.sep + "mapping.txt", new Buffer(""), "utf8");
+		sites.forEach(function (site) {
+			if (site !== "") {
+				realCount++;
+				site = site.trim();
+				checklocation(site, site);
+			}
+		});
 	} else {
 		throw "Please setup site.txt file.";
 	}
+	
+	var intervalId = setInterval(function () {
+		var keyCount = 0;
+		for (var site in locationMap) {
+			keyCount++;
+		}
+		if (realCount === keyCount) {
+			for (var site in locationMap) {
+				var arr = locationMap[site];
+				var data = "", token = "|||";
+				for (var i = 0 ; i < arr.length ; i++) {
+					data += arr[i] + token;
+				}
+				writeLocation(data.substring(0, data.length - token.length));
+			}
+			clearInterval(intervalId);
+		}
+	}, 2000);
 }
 
 var getCommand = function(param, saveReport) {
 	saveReport = saveReport || false
-	var domain = getUrlDomain(param.site);
 	var abPath = "";
 	var platform = os.platform().toLowerCase();
 	if (platform === "linux") {
-		abPath = apacheToolPathForLinux;
+		abPath = abLinux;
 	} else {
-		abPath = apacheToolPathForWin;
+		abPath = abWin;
 	}
 	if (saveReport) {
-		return util.format(abPath + saveReportCommand + abcommand, param.executeTime, domain, param.requestCount, param.site);
+		return util.format(abPath + abGParam + abCommonParam, param.timestamp, md5(param.site), param.requestCount, param.site);
 	} else {
-		return util.format(abPath + abcommand, param.requestCount, param.site);
+		return util.format(abPath + abCommonParam, param.requestCount, param.site);
 	}
 };
 
-var fetchBenchmarkData = function(executeTime, site) {
+var writeErrorMessage = function(error, stderr, timestamp) {
+	error = error || "";
+	stderr = stderr || "";
+	if (isNotEmptyString(error) || isNotEmptyString(stderr)) {
+		var errorMesg = (new Date()) + "\n" + error + "\n==============================\n";
+		fs.appendFile(util.format(errorSaveFile, timestamp), new Buffer(errorMesg));
+	}
+}
+
+var fetchABBenchmarkData = function(timestamp, site) {
 	var command = getCommand({
-		executeTime : executeTime, 
+		timestamp : timestamp, 
 		requestCount : 10, 
 		site : site
 	}, true);
 	var process = require('child_process');
 	var childProcess = process.exec(command, function (error, stdout, stderr) {
-		error = error || "";
-		stderr = stderr || "";
-		if (isNotEmptyString(error) || isNotEmptyString(stderr)) {
-			var errorMesg = (new Date()) + "\n" + error + "\n==============================\n";
-			var errorFile = util.format(errorSaveFile, executeTime);
-			fs.appendFile(errorFile, new Buffer(errorMesg));
-		}
+		fs.appendFile(util.format(abFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
+		writeErrorMessage(error, stderr, timestamp);
 		fetchOK++;
+		childProcess.kill();
 	});
-	return childProcess;
+};
+
+var fetchPingData = function(timestamp, site) {
+	var process = require('child_process');
+	var childProcess = process.exec(util.format(pingCommand, getUrlDomain(site)), {encoding : 'utf8'}, function (error, stdout, stderr) {
+		fs.appendFile(util.format(pingFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
+		childProcess.kill();
+	});
+};
+
+var fetchNslookupData = function(timestamp, site) {
+	var process = require('child_process');
+	var childProcess = process.exec(util.format(nsLookupCommand, getUrlDomain(site)), function (error, stdout, stderr) {
+		fs.appendFile(util.format(nsFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
+		childProcess.kill();
+	});
 };
 
 var benchmarking = function (callback, param) {
@@ -127,32 +195,44 @@ var benchmarking = function (callback, param) {
 	var content = fs.readFileSync(rootDir + path.sep + "location.txt").toString('utf8');
 	var sites = content.split("\n");
 	if (sites.length > 0) {
-		var executeTime = (new Date()).getTime() + "";
-		fs.mkdirSync(util.format(reportPath, executeTime));
+		var timestamp = (new Date()).getTime() + "";
+		
+		// mkdir report folder
+		fs.mkdirSync(util.format(reportFolder, timestamp));
+		fs.mkdirSync(util.format(pingFolder, timestamp));
+		fs.mkdirSync(util.format(abFolder, timestamp));
+		fs.mkdirSync(util.format(nsFolder, timestamp));
 		
 		// open process run ab benchmark
-		var processArr = [];
+		var siteCount = 0;
 		for (var i = 0 ; i < sites.length ; i++) {
-			processArr.push(fetchBenchmarkData(executeTime, sites[i]));
+			var site = sites[i];
+			if (site !== "") {
+				var list = site.split("|||");
+				for (var j = 0 ; j < list.length ; j++) {
+					siteCount++;
+					var location = list[j];
+					fetchABBenchmarkData(timestamp, location);
+					fetchPingData(timestamp, location);
+					fetchNslookupData(timestamp, location);
+				}
+			}
 		}
 		
 		// save information txt
-		fs.appendFile(util.format(inforSaveFile, executeTime), new Buffer(JSON.stringify({
+		fs.appendFile(util.format(inforSaveFile, timestamp), new Buffer(JSON.stringify({
 			os : os.platform().toLowerCase(),
-			remark : param.remark === null ? "" : param.remark
+			remark : (param.remark === null ? "" : param.remark)
 		})));
 		
 		// interval check process execute success
-		var maxTime = 5;
+		var maxTime = 20;
 		var intervalId = setInterval(function () {
-			if (sites.length <= fetchOK || maxTime === 0) {
+			if (siteCount <= fetchOK || maxTime === 0) {
 				console.log("benchmarker ending");
-				for (var i = 0 ; i < processArr.length ; i++) {
-					processArr[i].kill();
-				}
 				fetchOK = 0;
 				clearInterval(intervalId);
-				callback(executeTime);
+				callback(timestamp);
 			} else {
 				console.log("fetching....");
 				maxTime--;
