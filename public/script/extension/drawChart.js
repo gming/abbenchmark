@@ -135,6 +135,16 @@ define(["jquery", "chart", "chartExport"], function ($, chart, chartExport) {
 			}
 			var table = _private.getTableLayout(items, xKey, datagroup, infor);
 			table.appendTo(container);
+		},
+		drawMapping : function (container, items, md5) {
+			var mapping = $("<table />").addClass("table-cahrt");
+			for (var i = 0 ; i < items.length ; i++) {
+				var tr = $("<tr />");
+				tr.append($("<td />").html(md5[i]));
+				tr.append($("<td />").html(items[i]));
+				mapping.append(tr);
+			}
+			mapping.appendTo(container);
 		}
 	};
 	

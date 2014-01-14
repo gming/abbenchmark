@@ -80,7 +80,22 @@ var parser = function (executeTime) {
 			infor : report.infor
 		};
 	}
-	return reportsJson;
+	
+	var ordering = [];
+	var md5List = [];
+	fs.readFileSync(rootDir + path.sep + "site.txt").toString('utf8').split("\r").forEach(function (element) {
+		element = element.trim();
+		if (element !== "") {
+			ordering.push(getUrlDomain(element));
+			md5List.push(md5(element));
+		}
+	});
+	
+	return {
+		reportList : reportsJson,
+		ordering : ordering,
+		md5 : md5List
+	};
 };
 
 var getReportTimes = function () {

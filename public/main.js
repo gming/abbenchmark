@@ -34,19 +34,16 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 		tableChartBlock : $("div#table-chart"),
 		barChartBlock : $("div#bar-chart"),
 		lineChartBlock : $("div#line-chart"),
+		md5ChartBlock : $("div#md5-chart"),
 		errorMesgBlock : $("div#error-mesg"),
-		calculateAndFormat : function (rowDataArr) {
+		calculateAndFormat : function (rowDataArr, ordering) {
 			var result = {};
 			var count = 0;
 			for (var datetime in rowDataArr) {
 				var rowData = rowDataArr[datetime].report;
 				
 				// get item array
-				var items = "";
-				for (var domain in rowData) {
-					items += "," + domain;
-				}
-				items = items.substring(1).split(",");
+				var items = ordering;
 				
 				// check different items
 				if (count === 0) {
@@ -134,11 +131,11 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 			api.getReportByDatetime(
 				{'datetimes' : values},
 				function (resp) {
-					var result = _private.calculateAndFormat(resp.response);
-					console.log(result);
+					var result = _private.calculateAndFormat(resp.response.reportList, resp.response.ordering);
 					drawChart.drawBar(_private.barChartBlock, result.item, result.means, result.infor);
 					drawChart.drawLine(_private.lineChartBlock, result.item, result.means, result.infor);
 					drawChart.drawTable(_private.tableChartBlock, result.item, result.table, result.infor);
+					drawChart.drawMapping(_private.md5ChartBlock, result.item, resp.response.md5);
 				}
 			);
 		},

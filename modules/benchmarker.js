@@ -14,7 +14,7 @@ var errorSaveFile = reportFolder + 'error.txt';
 var inforSaveFile = reportFolder + 'infor.txt';
 var abGParam = ' -g ' + reportFolder + '%s.txt';
 var abCommonParam = ' -v 4 -n %s -c 1 %s ';
-var pingCommand = 'ping %s -n 1';
+var pingCommand = 'ping %s -n 10';
 var nsLookupCommand = 'nslookup %s';
 var fetchOK = 0;
 var resCode200 = "LOG: Response code = ";
