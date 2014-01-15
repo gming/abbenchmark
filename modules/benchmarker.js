@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var requests = 100;
+var stdoutMaxBuffer = stdoutMaxBuffer;
 var rootDir = path.dirname(require.main.filename);
 var abLinux = '/usr/bin/ab';
 var abWin = rootDir + path.sep + 'bin' + path.sep + 'ab.exe';
@@ -56,7 +57,7 @@ var checklocation = function (orisite, site) {
 	});
 	
 	var process = require('child_process');
-	var childProcess = process.exec(command, function (error, stdout, stderr) {
+	var childProcess = process.exec(command, {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		var done = stdout.indexOf("..done");
 		if (done !== -1) {
 			var responseCode = 0;
@@ -167,7 +168,7 @@ var fetchABBenchmarkData = function(timestamp, site) {
 		site : site
 	}, true);
 	var process = require('child_process');
-	var childProcess = process.exec(command, function (error, stdout, stderr) {
+	var childProcess = process.exec(command, {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		fs.appendFile(util.format(abFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
 		writeErrorMessage(error, stderr, timestamp);
 		fetchOK++;
@@ -177,7 +178,7 @@ var fetchABBenchmarkData = function(timestamp, site) {
 
 var fetchPingData = function(timestamp, site) {
 	var process = require('child_process');
-	var childProcess = process.exec(util.format(pingCommand, getUrlDomain(site)), {encoding : 'utf8'}, function (error, stdout, stderr) {
+	var childProcess = process.exec(util.format(pingCommand, getUrlDomain(site)), {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		fs.appendFile(util.format(pingFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
 		childProcess.kill();
 	});
@@ -185,8 +186,33 @@ var fetchPingData = function(timestamp, site) {
 
 var fetchNslookupData = function(timestamp, site) {
 	var process = require('child_process');
-	var childProcess = process.exec(util.format(nsLookupCommand, getUrlDomain(site)), function (error, stdout, stderr) {
+	var childProcess = process.exec(util.format(nsLookupCommand, getUrlDomain(site)), {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		fs.appendFile(util.format(nsFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
+		childProcess.kill();
+	});
+};
+
+var copyMappingAndLocationTxt = function (timestamp) {
+	var targetDir = util.format(reportFolder, timestamp);
+	var process = require('child_process');
+	var copyedFileList = ["mapping.txt", "location.txt"];
+	var copyCommand = "";
+	var platform = os.platform().toLowerCase();
+	if (platform === "linux") {
+		copyCommand = " cp -f %s %s ";
+	} else {
+		copyCommand = " copy /Y %s %s ";
+	}
+	
+	var sep = "&&";
+	var command = "";
+	for (var i = 0 ; i < copyedFileList.length ; i++) {
+		var filename = copyedFileList[i];
+		command += util.format(copyCommand, rootDir + path.sep + filename, targetDir + filename) + sep;
+	}
+	command = command.substring(command, command.length - sep.length);
+	
+	var childProcess = process.exec(command, {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		childProcess.kill();
 	});
 };
@@ -203,6 +229,9 @@ var benchmarking = function (callback, param) {
 		fs.mkdirSync(util.format(pingFolder, timestamp));
 		fs.mkdirSync(util.format(abFolder, timestamp));
 		fs.mkdirSync(util.format(nsFolder, timestamp));
+		
+		// copy the mapping.txt and location.txt
+		copyMappingAndLocationTxt(timestamp);
 		
 		// open process run ab benchmark
 		var siteCount = 0;
@@ -227,7 +256,7 @@ var benchmarking = function (callback, param) {
 		})));
 		
 		// interval check process execute success
-		var maxTime = 20;
+		var maxTime = 100;
 		var intervalId = setInterval(function () {
 			if (siteCount <= fetchOK || maxTime === 0) {
 				console.log("benchmarker ending");
@@ -235,7 +264,7 @@ var benchmarking = function (callback, param) {
 				clearInterval(intervalId);
 				callback(timestamp);
 			} else {
-				console.log("fetching....");
+				console.log("fetching....", maxTime, "need count:" + siteCount, "success count:" + fetchOK + 1);
 				maxTime--;
 			}
 		}, 3000);
