@@ -3,6 +3,7 @@ var md5 = require('MD5');
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
+var requests = 100;
 var rootDir = path.dirname(require.main.filename);
 var abLinux = '/usr/bin/ab';
 var abWin = rootDir + path.sep + 'bin' + path.sep + 'ab.exe';
@@ -14,7 +15,7 @@ var errorSaveFile = reportFolder + 'error.txt';
 var inforSaveFile = reportFolder + 'infor.txt';
 var abGParam = ' -g ' + reportFolder + '%s.txt';
 var abCommonParam = ' -v 4 -n %s -c 1 %s ';
-var pingCommand = 'ping %s -n 10';
+var pingCommand = 'ping %s -n ' + requests;
 var nsLookupCommand = 'nslookup %s';
 var fetchOK = 0;
 var resCode200 = "LOG: Response code = ";
@@ -162,7 +163,7 @@ var writeErrorMessage = function(error, stderr, timestamp) {
 var fetchABBenchmarkData = function(timestamp, site) {
 	var command = getCommand({
 		timestamp : timestamp, 
-		requestCount : 10, 
+		requestCount : requests, 
 		site : site
 	}, true);
 	var process = require('child_process');

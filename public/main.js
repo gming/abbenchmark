@@ -126,6 +126,7 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 			_private.tableChartBlock.html("");
 			_private.barChartBlock.html("");
 			_private.lineChartBlock.html("");
+			_private.md5ChartBlock.html("");
 		},
 		getReportAndDrawCharts : function (values) {
 			api.getReportByDatetime(
