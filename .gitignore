@@ -5,5 +5,6 @@ node_modules
 *.jshintrc
 .DS_Store
 report
+export
 mapping.txt
 location.txt

@@ -11,7 +11,8 @@
     "express": "git+ssh://git@github.com:visionmedia/express.git#3.2.6",
     "jade": "git+ssh://git@github.com:visionmedia/jade.git#1.0.0",
     "moment": "git+ssh://git@github.com:moment/moment.git#2.5.0",
-	"md5": "git+ssh://git@github.com:pvorb/node-md5.git#1.2.0"
+	"md5": "git+ssh://git@github.com:pvorb/node-md5.git#1.2.0",
+	"node-xlsx": "git+ssh://git@github.com:mgcrea/node-xlsx.git#0.2.2"
   },
   "author": "gming <ppooccoo0123@gmail.com>",
   "license": "MIT",

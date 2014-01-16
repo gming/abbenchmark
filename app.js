@@ -49,12 +49,14 @@ app.post('/api/getReportByDatetime', function (req, res) {
 });
 
 app.get('/api/exportReport', function (req, res) {
+	var exportPath = reports.exportExcel(req.query.timestamps);
+	var filename = exportPath.substring(exportPath.lastIndexOf(path.sep) + 1, exportPath.length);
 	var header = {
-		'Content-type' : 'application/vnd.ms-excel; charset=utf-8',
-		'Content-disposition' : 'attachment; filename=report_' + (new Date().getTime()) + '.xls',
-		'Cache-control' : 'max-age=0'
+		'Content-Type' : 'application/vnd.ms-excel; charset=utf-8',
+		'Content-Disposition' : 'attachment; filename=' + filename,
+		'Cache-Control' : 'max-age=0'
 	};
-	response.file(res, header);
+	response.file(res, header, exportPath);
 });
 
 // run server
