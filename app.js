@@ -50,7 +50,7 @@ app.post('/api/getReportByDatetime', function (req, res) {
 
 // run server
 var server = http.createServer(app);
-server.setTimeout(5 * 60 * 1000);
+server.setTimeout(15 * 60 * 1000);
 server.listen(app.get('port'), function () {
 	benchmarker.checkSiteList();
 	console.log('server listening on port ' + app.get('port'));

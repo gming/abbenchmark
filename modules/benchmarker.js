@@ -171,6 +171,7 @@ var fetchABBenchmarkData = function(timestamp, site) {
 	var childProcess = process.exec(command, {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		fs.appendFile(util.format(abFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
 		writeErrorMessage(error, stderr, timestamp);
+		console.log("[ab fetch end]" + site, md5(site));
 		fetchOK++;
 		childProcess.kill();
 	});
@@ -256,7 +257,7 @@ var benchmarking = function (callback, param) {
 		})));
 		
 		// interval check process execute success
-		var maxTime = 100;
+		var maxTime = 300;
 		var intervalId = setInterval(function () {
 			if (siteCount <= fetchOK || maxTime === 0) {
 				console.log("benchmarker ending");
