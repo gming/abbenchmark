@@ -71,6 +71,9 @@ define(["jquery"], function ($) {
 					callback(_private.getErrorObj(textStatus, errorThrown));
 				}
 			});
+		},
+		getUrl : function (url) {
+			return _private.getUrl(url);
 		}
 	};
 	

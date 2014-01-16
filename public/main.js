@@ -164,7 +164,14 @@ require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, 
 			values.push($(this).attr("value"));
 		});
 		_private.clearCharBlock();
-		_private.getReportAndDrawCharts(values);
+		
+		// set export excel report parameter and draw chart dataset
+		if (values.length > 0) {
+			_private.getReportAndDrawCharts(values);
+			$('#export-btn').attr("href", api.exportReport(values.join(",")));
+		} else {
+			$('#export-btn').attr("href", "#");
+		}
 	});
 	
 	// do benchmark

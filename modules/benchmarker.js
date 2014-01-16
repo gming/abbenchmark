@@ -171,7 +171,7 @@ var fetchABBenchmarkData = function(timestamp, site) {
 	var childProcess = process.exec(command, {maxBuffer: stdoutMaxBuffer}, function (error, stdout, stderr) {
 		fs.appendFile(util.format(abFolder, timestamp) + md5(site) + '.txt', new Buffer(stdout));
 		writeErrorMessage(error, stderr, timestamp);
-		console.log("[ab fetch end]" + site, md5(site));
+		console.log("[ab fetch end] " + site, md5(site));
 		fetchOK++;
 		childProcess.kill();
 	});
@@ -265,7 +265,7 @@ var benchmarking = function (callback, param) {
 				clearInterval(intervalId);
 				callback(timestamp);
 			} else {
-				console.log("fetching....", maxTime, "need count:" + siteCount, "success count:" + (fetchOK + 1));
+				console.log("fetching....", maxTime, "need count:" + siteCount, "processing count:" + (fetchOK + 1));
 				maxTime--;
 			}
 		}, 3000);

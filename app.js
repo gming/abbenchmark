@@ -48,6 +48,15 @@ app.post('/api/getReportByDatetime', function (req, res) {
 	response.json(res, status.OK, reports.parser(req.body.datetimes));
 });
 
+app.get('/api/exportReport', function (req, res) {
+	var header = {
+		'Content-type' : 'application/vnd.ms-excel; charset=utf-8',
+		'Content-disposition' : 'attachment; filename=report_' + (new Date().getTime()) + '.xls',
+		'Cache-control' : 'max-age=0'
+	};
+	response.file(res, header);
+});
+
 // run server
 var server = http.createServer(app);
 server.setTimeout(15 * 60 * 1000);

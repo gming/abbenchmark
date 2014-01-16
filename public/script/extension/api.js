@@ -40,6 +40,9 @@ define(["ajax"], function (ajax) {
 		},
 		getReportByDatetime : function () {
 			_private.callRemoteServer('post', 'getReportByDatetime', arguments);
+		},
+		exportReport : function (exportsArray) {
+			return ajax.getUrl('exportReport') + "&timestamps=" + exportsArray;
 		}
 	};
 });
