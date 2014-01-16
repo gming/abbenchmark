@@ -107,8 +107,11 @@ var getReportTimes = function () {
 	var reportDateList = fs.readdirSync(reportFolder) || [];
 	for (var i = 0 ; i < reportDateList.length ; i++) {
 		var reportDate = reportDateList[i];
-		var reportFiles = fs.readdirSync(util.format(reportFolder + '%s' + path.sep, reportDate));
-		if (reportFiles.length === 0) {
+		var folderPath = util.format(reportFolder + '%s' + path.sep, reportDate);
+		if (! fs.statSync(folderPath).isDirectory()) {
+			continue ;
+		}
+		if (fs.readdirSync(folderPath).length === 0) {
 			continue ;
 		}
 		var datetime = parseInt(reportDate);

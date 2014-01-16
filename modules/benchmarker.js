@@ -264,7 +264,7 @@ var benchmarking = function (callback, param) {
 				clearInterval(intervalId);
 				callback(timestamp);
 			} else {
-				console.log("fetching....", maxTime, "need count:" + siteCount, "success count:" + fetchOK + 1);
+				console.log("fetching....", maxTime, "need count:" + siteCount, "success count:" + (fetchOK + 1));
 				maxTime--;
 			}
 		}, 3000);
