@@ -152,7 +152,7 @@ var exportExcel = function (timestamps) {
 		}
 	});
 	
-	// composite excel table, and calculate ab min, max, mean value
+	// composite excel title table, and calculate ab min, max, mean value
 	var inforPath = reportFolder + '%s' + path.sep + 'infor.txt';
 	var firstRow = ["", ""];
 	var secondRow = ["", "gzip"];
@@ -188,7 +188,7 @@ var exportExcel = function (timestamps) {
 		abReport[time] = abMap;
 	});
 	
-	// 
+	// composite excel data table
 	var dataRowArr = [];
 	for (var i = 0 ; i < siteOrdering.length ; i++) {
 		var site = siteOrdering[i];
@@ -211,6 +211,13 @@ var exportExcel = function (timestamps) {
 			});
 			
 			var ab = abReport[time][domain];
+			if (ab === undefined || ab === null) {
+				ab = {
+					min : "",
+					max : "",
+					mean : ""
+				};
+			}
 			rowData = rowData.concat([ab.min, ab.max, ab.mean, followDirect[site].join("\n"), "", "", ""]);
 		});
 		dataRowArr.push(rowData);
