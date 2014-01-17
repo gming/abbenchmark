@@ -27,7 +27,7 @@ var parsingByTime = function (executeTime) {
 	executeTime = executeTime || "";
 	var report = {};
 	var folder = util.format(reportFolder + '%s' + path.sep, executeTime);
-	var content = fs.readFileSync(rootDir + path.sep + "location.txt").toString('utf8');
+	var content = fs.readFileSync(folder + "location.txt").toString('utf8');
 	content.split("\n").forEach(function (direction) {
 		if (direction !== "") {
 			var location = direction.split("|||");
@@ -136,6 +136,12 @@ var getReportTimes = function () {
 var exportExcel = function (timestamps) {
 	checkSystemFolder();
 	
+	// do check timestamps
+	var timesArr = timestamps.split(",");
+	if (timesArr.length === 0) {
+		return "";
+	}
+	
 	// get site ordering
 	var sitePath = rootDir + path.sep + 'site.txt';
 	var siteOrdering = [];
@@ -146,38 +152,70 @@ var exportExcel = function (timestamps) {
 		}
 	});
 	
-	// composite excel table
-	var followDirect = {};
-	var md5Mapping = {};
+	// composite excel table, and calculate ab min, max, mean value
 	var inforPath = reportFolder + '%s' + path.sep + 'infor.txt';
-	var locationPath = reportFolder + '%s' + path.sep + 'location.txt';
-	var mappingPath = reportFolder + '%s' + path.sep + 'mapping.txt';
-	var firstRow = ["", "", ""];
-	var secondRow = ["", "", "gzip"];
-	/*timestamps.split(",").forEach(function(time) {
+	var firstRow = ["", ""];
+	var secondRow = ["", "gzip"];
+	var abReport = {};
+	timesArr.forEach(function(time) {
 		var infor = JSON.parse(fs.readFileSync(util.format(inforPath, time)).toString('utf8'));
-		var title = infor.remark + '\n(' + moment.utc(parseInt(time)).format(commonDatetimeFormat) + ')';
-		firstRow.concat([title, "", "", "", "", "", ""]);
-		secondRow.concat(excelSubtitle);
-		var locationContent = fs.readFileSync(util.format(locationPath, time)).toString('utf8');
-		locationContent.split("\n").forEach(function(location) {
-			var directList = location.trim().split("|||");
-			var existDirect = followDirect[directList[0]];
-			if (existDirect === undefined || existDirect === null) {
-				followDirect[directList[0]] = directList;
-			} else {
+		var title = infor.remark + '\r\n(' + moment.utc(parseInt(time)).format(commonDatetimeFormat) + ')';
+		firstRow = firstRow.concat([title, "", "", "", "", "", ""]);
+		secondRow = secondRow.concat(excelSubtitle);
+		var abRowData = parsingByTime(time).list;
+		var abMap = {};
+		for (var key in abRowData) {
+			var min = 999999, max = 0, sum = 0;
+			var rowData = abRowData[key];
+			for (var i = 0 ; i < rowData.length ; i++) {
+				var total = parseInt(rowData[i].total);
+				if (total < min) {
+					min = total;
+				}
 				
+				if (total > max) {
+					max = total;
+				}
+				
+				sum += total;
 			}
-		});
+			abMap[key] = {
+				'min' : min,
+				'max' : max,
+				'mean' : (sum / rowData.length)
+			};
+		}
+		abReport[time] = abMap;
 	});
 	
-	
-	
+	// 
 	var dataRowArr = [];
-	for () {
-		var rowData = [];
+	for (var i = 0 ; i < siteOrdering.length ; i++) {
+		var site = siteOrdering[i];
+		var domain = getUrlDomain(site);
+		var rowData = [domain, ""];
+		timesArr.forEach(function(time) {
+			var followDirect = {};
+			var md5Mapping = {};
+			var locationPath = reportFolder + '%s' + path.sep + 'location.txt';
+			var mappingPath = reportFolder + '%s' + path.sep + 'mapping.txt';
+			var locationContent = fs.readFileSync(util.format(locationPath, time)).toString('utf8');
+			locationContent.split("\n").forEach(function(location) {
+				var directList = location.trim().split("|||");
+				followDirect[directList[0]] = directList;
+			});
+			var mappingContent = fs.readFileSync(util.format(mappingPath, time)).toString('utf8');
+			mappingContent.split("\n").forEach(function(mapping) {
+				var mappingPair = mapping.trim().split(",");
+				md5Mapping[mappingPair[0]] = mappingPair[1];
+			});
+			
+			var ab = abReport[time][domain];
+			rowData = rowData.concat([ab.min, ab.max, ab.mean, followDirect[site].join("\n"), "", "", ""]);
+		});
 		dataRowArr.push(rowData);
 	}
+	
 	// export excel
 	var filename = "report_" + (new Date().getTime()) + ".xlsx";
 	var exportPath = exportFolder + filename;
@@ -187,7 +225,6 @@ var exportExcel = function (timestamps) {
 			"data" : data
 		}]
 	}));
-	*/
 	
 	return exportPath;
 };
