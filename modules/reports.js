@@ -195,14 +195,14 @@ var exportExcel = function (timestamps) {
 		var domain = getUrlDomain(site);
 		var rowData = [domain, ""];
 		timesArr.forEach(function(time) {
-			var followDirect = {};
+			var followDirectMap = {};
 			var md5Mapping = {};
 			var locationPath = reportFolder + '%s' + path.sep + 'location.txt';
 			var mappingPath = reportFolder + '%s' + path.sep + 'mapping.txt';
 			var locationContent = fs.readFileSync(util.format(locationPath, time)).toString('utf8');
 			locationContent.split("\n").forEach(function(location) {
 				var directList = location.trim().split("|||");
-				followDirect[directList[0]] = directList;
+				followDirectMap[directList[0]] = directList;
 			});
 			var mappingContent = fs.readFileSync(util.format(mappingPath, time)).toString('utf8');
 			mappingContent.split("\n").forEach(function(mapping) {
@@ -218,7 +218,16 @@ var exportExcel = function (timestamps) {
 					mean : ""
 				};
 			}
-			rowData = rowData.concat([ab.min, ab.max, ab.mean, followDirect[site].join("\n"), "", "", ""]);
+			
+			var directData = undefined;
+			var followDirect = followDirectMap[site];
+			if (followDirect === undefined || followDirect === null) {
+				directData = "";
+			} else {
+				directData = followDirect.join("\n");
+			}
+			
+			rowData = rowData.concat([ab.min, ab.max, ab.mean, directData, "", "", ""]);
 		});
 		dataRowArr.push(rowData);
 	}
@@ -229,6 +238,7 @@ var exportExcel = function (timestamps) {
 	var data = ([firstRow, secondRow]).concat(dataRowArr);
 	fs.appendFile(exportPath, xlsx.build({
 		worksheets : [{
+			"name" : "sheet_1",
 			"data" : data
 		}]
 	}));
