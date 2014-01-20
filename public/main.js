@@ -9,7 +9,6 @@ require.config({
 		chartExport : "/script/lib/highcharts.export",
 		ajax : "/script/extension/ajax",
 		drawChart : "/script/extension/drawChart",
-		manageTable : "/script/extension/manageTable",
 		api : "/script/extension/api",
 	},
 	shim : {
@@ -28,7 +27,7 @@ require.config({
 	}
 });
 
-require(['jquery', 'jqueryui', 'api', 'drawChart', 'manageTable'], function ($, $ui, api, drawChart, manageTable) {
+require(['jquery', 'jqueryui', 'api', 'drawChart'], function ($, $ui, api, drawChart) {
 	
 	var _private = {
 		tableChartBlock : $("div#table-chart"),
