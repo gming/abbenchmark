@@ -1,3 +1,4 @@
+// testing common
 var express = require('express');
 var app = express();
 var http = require('http');
@@ -49,7 +50,7 @@ app.post('/api/getReportByDatetime', function (req, res) {
 });
 
 app.get('/api/exportReport', function (req, res) {
-	var exportPath = reports.exportExcel(req.query.timestamps);
+	var exportPath = reports.exportRowdataExcel(req.query.timestamps);
 	var filename = exportPath.substring(exportPath.lastIndexOf(path.sep) + 1, exportPath.length);
 	var header = {
 		'Content-Type' : 'application/vnd.ms-excel; charset=utf-8',
@@ -59,9 +60,21 @@ app.get('/api/exportReport', function (req, res) {
 	response.file(res, header, exportPath);
 });
 
+app.get('/api/exportRowdataReport', function (req, res) {
+	var exportPath = reports.exportRowdataExcel(req.query.timestamps);
+	// TODO
+	/*var filename = exportPath.substring(exportPath.lastIndexOf(path.sep) + 1, exportPath.length);
+	var header = {
+		'Content-Type' : 'application/vnd.ms-excel; charset=utf-8',
+		'Content-Disposition' : 'attachment; filename=' + filename,
+		'Cache-Control' : 'max-age=0'
+	};
+	response.file(res, header, exportPath);*/
+});
+
 // run server
 var server = http.createServer(app);
-server.setTimeout(15 * 60 * 1000);
+server.setTimeout(60 * 60 * 1000);
 server.listen(app.get('port'), function () {
 	benchmarker.checkSiteList();
 	console.log('server listening on port ' + app.get('port'));
