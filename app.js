@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-// testing common
-=======
-var a = "1";
->>>>>>> d845dd8fc7706c16e7c36e0aeed7fdad9b0723ee
 var express = require('express');
 var app = express();
 var http = require('http');
